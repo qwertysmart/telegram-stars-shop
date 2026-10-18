@@ -1,10 +1,10 @@
 import os
+import json
 import time
 import random
 import string
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
-from pymongo import MongoClient
 import requests
 from dotenv import load_dotenv
 
@@ -13,22 +13,46 @@ load_dotenv()
 app = Flask(__name__, static_folder='public', static_url_path='')
 
 # Configuration
-GRAMIX_API_KEY = os.getenv('GRAMIX_API_KEY')
+GRAMIX_API_KEY = os.getenv('GRAMIX_API_KEY', '')
 GRAMIX_API_URL = os.getenv('GRAMIX_API_URL', 'https://api.gramix.org')
-STAR_PRICE = int(os.getenv('STAR_PRICE', 2))
-MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/telegram-stars-shop')
+STAR_PRICE = float(os.getenv('STAR_PRICE', 1.5))
 PORT = int(os.getenv('PORT', 3000))
 
-# MongoDB connection
-try:
-    client = MongoClient(MONGODB_URI)
-    db = client.get_default_database()
-    orders_collection = db.orders
-    print('✓ MongoDB connected')
-except Exception as e:
-    print(f'✗ MongoDB connection error: {e}')
-    orders_collection = None
+# JSON database file
+DB_FILE = 'orders.json'
 
+def load_db():
+    """Load orders from JSON file"""
+    if not os.path.exists(DB_FILE):
+        return {'orders': []}
+    try:
+        with open(DB_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return {'orders': []}
+
+def save_db(data):
+    """Save orders to JSON file"""
+    with open(DB_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def find_order(order_id):
+    """Find order by ID"""
+    db = load_db()
+    for order in db['orders']:
+        if order['orderId'] == order_id:
+            return order
+    return None
+
+def update_order(order_id, updates):
+    """Update order fields"""
+    db = load_db()
+    for order in db['orders']:
+        if order['orderId'] == order_id:
+            order.update(updates)
+            order['updatedAt'] = datetime.utcnow().isoformat()
+            break
+    save_db(db)
 
 # Routes
 @app.route('/')
@@ -60,17 +84,14 @@ def create_payment():
         account = data.get('account')
         amount = data.get('amount')
 
-        # Validate input
         if not stars or not account or not amount:
             return jsonify({'error': 'Missing required fields'}), 400
 
         if stars < 1:
             return jsonify({'error': 'Stars must be at least 1'}), 400
 
-        # Generate unique order ID
         order_id = generate_order_id()
 
-        # Create order in database
         order = {
             'orderId': order_id,
             'stars': stars,
@@ -79,17 +100,16 @@ def create_payment():
             'status': 'pending',
             'paymentData': {},
             'gramixResponse': {},
-            'createdAt': datetime.utcnow(),
-            'updatedAt': datetime.utcnow()
+            'createdAt': datetime.utcnow().isoformat(),
+            'updatedAt': datetime.utcnow().isoformat()
         }
 
-        if orders_collection:
-            orders_collection.insert_one(order)
-            print(f'✓ Order created: {order_id}')
-        else:
-            print('✗ MongoDB not connected, order not saved')
+        db = load_db()
+        db['orders'].append(order)
+        save_db(db)
 
-        # TODO: Integrate real payment system
+        print(f'✓ Order created: {order_id}')
+
         payment_url = f'/payment.html?order={order_id}'
 
         return jsonify({
@@ -115,66 +135,41 @@ def payment_webhook():
 
         print(f'✓ Webhook received for order: {order_id}')
 
-        if not orders_collection:
-            return jsonify({'error': 'Database not connected'}), 500
-
-        # Find order in database
-        order = orders_collection.find_one({'orderId': order_id})
+        order = find_order(order_id)
 
         if not order:
             print(f'✗ Order not found: {order_id}')
             return jsonify({'error': 'Order not found'}), 404
 
         if status == 'success':
-            # Update order status
-            orders_collection.update_one(
-                {'orderId': order_id},
-                {'$set': {
-                    'status': 'paid',
-                    'paymentData': payment_data,
-                    'updatedAt': datetime.utcnow()
-                }}
-            )
+            update_order(order_id, {
+                'status': 'paid',
+                'paymentData': payment_data
+            })
 
             print(f'✓ Payment confirmed for order: {order_id}')
 
-            # Send stars via Gramix API
             try:
                 gramix_result = send_stars_via_gramix(order['stars'], order['account'])
 
-                # Update order with Gramix response
-                orders_collection.update_one(
-                    {'orderId': order_id},
-                    {'$set': {
-                        'status': 'completed',
-                        'gramixResponse': gramix_result,
-                        'updatedAt': datetime.utcnow()
-                    }}
-                )
+                update_order(order_id, {
+                    'status': 'completed',
+                    'gramixResponse': gramix_result
+                })
 
                 print(f'✓ Stars sent successfully for order: {order_id}')
                 return jsonify({'success': True})
 
             except Exception as e:
                 print(f'✗ Error sending stars: {e}')
-                orders_collection.update_one(
-                    {'orderId': order_id},
-                    {'$set': {
-                        'status': 'failed',
-                        'updatedAt': datetime.utcnow()
-                    }}
-                )
+                update_order(order_id, {'status': 'failed'})
                 return jsonify({'success': False, 'error': str(e)}), 500
 
         else:
-            orders_collection.update_one(
-                {'orderId': order_id},
-                {'$set': {
-                    'status': 'failed',
-                    'paymentData': payment_data,
-                    'updatedAt': datetime.utcnow()
-                }}
-            )
+            update_order(order_id, {
+                'status': 'failed',
+                'paymentData': payment_data
+            })
 
             print(f'✗ Payment failed for order: {order_id}')
             return jsonify({'success': False, 'error': 'Payment not successful'})
@@ -188,10 +183,7 @@ def payment_webhook():
 @app.route('/api/order/<order_id>', methods=['GET'])
 def get_order(order_id):
     try:
-        if not orders_collection:
-            return jsonify({'error': 'Database not connected'}), 500
-
-        order = orders_collection.find_one({'orderId': order_id})
+        order = find_order(order_id)
 
         if not order:
             return jsonify({'error': 'Order not found'}), 404
@@ -202,7 +194,7 @@ def get_order(order_id):
             'stars': order['stars'],
             'account': order['account'],
             'amount': order['amount'],
-            'createdAt': order['createdAt'].isoformat()
+            'createdAt': order['createdAt']
         })
 
     except Exception as e:
@@ -214,25 +206,21 @@ def get_order(order_id):
 @app.route('/api/admin/stats', methods=['GET'])
 def get_admin_stats():
     try:
-        if not orders_collection:
-            return jsonify({'error': 'Database not connected'}), 500
+        db = load_db()
+        orders = db['orders']
 
-        # Get all orders
-        orders = list(orders_collection.find().sort('createdAt', -1).limit(20))
+        completed = [o for o in orders if o['status'] == 'completed']
+        total_revenue = sum(o['amount'] for o in completed)
+        total_stars = sum(o['stars'] for o in completed)
 
-        # Calculate stats
-        all_orders = list(orders_collection.find())
-        completed_orders = [o for o in all_orders if o['status'] == 'completed']
+        # Last 20 orders sorted by date desc
+        recent = sorted(orders, key=lambda x: x['createdAt'], reverse=True)[:20]
 
-        total_revenue = sum(o['amount'] for o in completed_orders)
-        total_stars = sum(o['stars'] for o in completed_orders)
-
-        # Format orders for response
-        formatted_orders = []
-        for order in orders:
-            formatted_orders.append({
+        formatted = []
+        for order in recent:
+            formatted.append({
                 'id': order['orderId'],
-                'date': order['createdAt'].isoformat(),
+                'date': order['createdAt'],
                 'account': order['account'],
                 'stars': order['stars'],
                 'amount': order['amount'],
@@ -243,11 +231,11 @@ def get_admin_stats():
             'success': True,
             'stats': {
                 'totalRevenue': total_revenue,
-                'totalOrders': len(all_orders),
+                'totalOrders': len(orders),
                 'totalStars': total_stars,
                 'starPrice': STAR_PRICE
             },
-            'orders': formatted_orders
+            'orders': formatted
         })
 
     except Exception as e:
@@ -265,11 +253,9 @@ def update_star_price():
         if new_price < 0.1:
             return jsonify({'error': 'Price must be at least 0.1'}), 400
 
-        # Update global variable
         global STAR_PRICE
         STAR_PRICE = new_price
 
-        # TODO: Save to environment or config file
         print(f'✓ Star price updated to {new_price}₽')
 
         return jsonify({'success': True})
@@ -286,7 +272,6 @@ def send_stars_via_gramix(stars, account):
 
         print(f'→ Sending {stars} stars to {username} via Gramix...')
 
-        # Call Gramix API
         response = requests.post(
             f'{GRAMIX_API_URL}/send-stars',
             headers={
@@ -315,17 +300,12 @@ def send_stars_via_gramix(stars, account):
 
 def extract_username(account):
     """Extract username from various Telegram account formats"""
-    # Remove @ prefix
     if account.startswith('@'):
         return account[1:]
-
-    # Extract from t.me/ or telegram.me/ URLs
     if 't.me/' in account:
         return account.split('t.me/')[1].split('?')[0]
-
     if 'telegram.me/' in account:
         return account.split('telegram.me/')[1].split('?')[0]
-
     return account
 
 
