@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstroStars - Купить Звезды Telegram</title>
+    <link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="page-wrap">
+    <div class="layout">
+        <aside class="side-panel side-left">
+            <div class="side-card">
+                <div class="side-title">Как это работает</div>
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Укажите количество звезд и ваш Telegram username</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Оплатите удобным способом — карта, СБП или крипта</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Звезды моментально зачисляются на ваш аккаунт</div>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <div class="side-title">Статистика онлайн</div>
+                <div class="live-stat">
+                    <span class="live-dot"></span>
+                    <span class="live-text"><span id="ordersToday">—</span> заказов сегодня</span>
+                </div>
+                <div class="live-stat">
+                    <span class="live-text"><span id="starsToday">—</span> звезд продано сегодня</span>
+                </div>
+                <div class="live-stat">
+                    <span class="live-text">Средняя доставка: <b>~40 сек</b></span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="container">
+        <div class="card">
+            <div class="card-glow"></div>
+
+            <div class="logo">
+                <div class="logo-icon-wrapper">
+                    <div class="logo-icon">✨</div>
+                </div>
+                <div class="logo-text">AstroStars</div>
+            </div>
+
+            <div class="header">
+                <h1>Покупка Звезд Telegram</h1>
+                <p class="subtitle">Мгновенная доставка • Безопасно • Надежно</p>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">10K+</div>
+                    <div class="stat-label">Клиентов</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <div class="stat-value">99.9%</div>
+                    <div class="stat-label">Успешно</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <div class="stat-value">24/7</div>
+                    <div class="stat-label">Поддержка</div>
+                </div>
+            </div>
+
+            <form id="purchaseForm" class="form">
+                <div class="form-group">
+                    <label for="stars">
+                        <span class="label-text">Количество звезд</span>
+                        <span class="label-badge">Популярно</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">⭐</span>
+                        <input
+                            type="number"
+                            id="stars"
+                            name="stars"
+                            placeholder="100"
+                            min="1"
+                            required
+                        >
+                    </div>
+                    <div class="quick-amounts">
+                        <button type="button" class="quick-btn" data-amount="50">50</button>
+                        <button type="button" class="quick-btn" data-amount="100">100</button>
+                        <button type="button" class="quick-btn" data-amount="500">500</button>
+                        <button type="button" class="quick-btn" data-amount="1000">1000</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="account">
+                        <span class="label-text">Telegram аккаунт</span>
+                        <span class="label-hint">💡 Совет</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">@</span>
+                        <input
+                            type="text"
+                            id="account"
+                            name="account"
+                            placeholder="username или t.me/username"
+                            required
+                        >
+                    </div>
+                    <p class="hint-text">Убедитесь, что ваш username указан правильно</p>
+                </div>
+
+                <div class="price-card">
+                    <div class="price-header">
+                        <span class="price-label">Итого к оплате</span>
+                        <span class="price-badge">💳 Все способы</span>
+                    </div>
+                    <div class="price-amount">
+                        <span class="price-value" id="totalPrice">0</span>
+                        <span class="price-currency">₽</span>
+                    </div>
+                    <div class="price-details">
+                        <span>1 звезда = 1.5₽</span>
+                        <span class="price-delivery">• Доставка мгновенно</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span class="btn-text">Перейти к оплате</span>
+                    <span class="btn-icon">→</span>
+                </button>
+
+                <div class="trust-badges">
+                    <div class="badge">🔒 SSL защита</div>
+                    <div class="badge">✅ Гарантия возврата</div>
+                    <div class="badge">⚡ Instant delivery</div>
+                </div>
+            </form>
+        </div>
+        </div>
+
+        <aside class="side-panel side-right">
+            <div class="side-card">
+                <div class="side-title">Почему мы</div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">
+                        <b>Мгновенная доставка</b>
+                        <span>Звезды приходят за секунды после оплаты</span>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-text">
+                        <b>Безопасно</b>
+                        <span>Не нужен пароль — только username</span>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💎</div>
+                    <div class="feature-text">
+                        <b>Лучшая цена</b>
+                        <span>1.5₽ за звезду — дешевле чем в Telegram</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <div class="side-title">Последние покупки</div>
+                <div id="recentOrders">
+                    <div class="recent-order"><span class="recent-user">@ma***n</span><span class="recent-amount">+500 ⭐</span></div>
+                    <div class="recent-order"><span class="recent-user">@al***a</span><span class="recent-amount">+100 ⭐</span></div>
+                    <div class="recent-order"><span class="recent-user">@dm***v</span><span class="recent-amount">+1000 ⭐</span></div>
+                </div>
+            </div>
+        </aside>
+    </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">✨ AstroStars</div>
+                <p>Мгновенная покупка звезд Telegram.<br>Работаем 24/7 без выходных.</p>
+            </div>
+            <div class="footer-section">
+                <div class="footer-title">Навигация</div>
+                <a href="/">Главная</a>
+            </div>
+            <div class="footer-section">
+                <div class="footer-title">Поддержка</div>
+                <a href="https://t.me/support" target="_blank">Telegram чат</a>
+                <a href="mailto:support@astrostars.io">support@astrostars.io</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 AstroStars. Все права защищены.</span>
+        </div>
+    </footer>
+
+    <script src="script.js?v=2"></script>
+</body>
+</html>

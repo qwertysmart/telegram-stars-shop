@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Успешно - AstroStars</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .success-container {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4ADE80, #22C55E);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+            animation: successPop 0.5s ease-out;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .success-title {
+            color: #F8FAFC;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .success-message {
+            color: #94A3B8;
+            font-size: 15px;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .info-box {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #F8FAFC;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            background: rgba(30, 41, 59, 0.6);
+            color: #F8FAFC;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: block;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: #38BDF8;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="container success-container">
+        <div class="card">
+            <div class="card-glow"></div>
+
+            <div class="success-icon">✓</div>
+
+            <h1 class="success-title">Оплата прошла успешно!</h1>
+            <p class="success-message">
+                Ваши звезды будут зачислены на аккаунт в течение нескольких минут.
+                Спасибо за покупку!
+            </p>
+
+            <div class="info-box">
+                <div class="info-item">
+                    <span class="info-label">Статус</span>
+                    <span class="info-value" style="color: #4ADE80;">Выполнено ✓</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Доставка</span>
+                    <span class="info-value">В обработке</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Время</span>
+                    <span class="info-value" id="currentTime">-</span>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="/" class="btn-primary">
+                    <span class="btn-text">Купить еще звезды</span>
+                    <span class="btn-icon">→</span>
+                </a>
+                <a href="https://t.me" class="btn-secondary">
+                    Открыть Telegram
+                </a>
+            </div>
+
+            <div class="trust-badges" style="margin-top: 24px;">
+                <div class="badge">⚡ Мгновенная доставка</div>
+                <div class="badge">✅ Гарантия качества</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const now = new Date();
+        document.getElementById('currentTime').textContent =
+            now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    </script>
+</body>
+</html>

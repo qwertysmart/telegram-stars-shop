@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата заказа - AstroStars</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .payment-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .payment-info {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(56, 189, 248, 0.15);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #F8FAFC;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .payment-methods {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .payment-method {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .payment-method:hover {
+            border-color: #38BDF8;
+            background: rgba(56, 189, 248, 0.05);
+        }
+
+        .payment-method.selected {
+            border-color: #38BDF8;
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .method-icon {
+            font-size: 24px;
+        }
+
+        .method-name {
+            color: #F8FAFC;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 20px;
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(56, 189, 248, 0.3);
+            border-top-color: #38BDF8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="container payment-container">
+        <div class="card">
+            <div class="card-glow"></div>
+
+            <div class="logo">
+                <div class="logo-icon-wrapper">
+                    <div class="logo-icon">✨</div>
+                </div>
+                <div class="logo-text">AstroStars</div>
+            </div>
+
+            <div class="header">
+                <h1>Оплата заказа</h1>
+                <p class="subtitle" id="orderIdDisplay">Загрузка...</p>
+            </div>
+
+            <div class="payment-info" id="orderInfo">
+                <div class="info-row">
+                    <span class="info-label">Количество звезд</span>
+                    <span class="info-value" id="starsAmount">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Аккаунт</span>
+                    <span class="info-value" id="accountName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Сумма к оплате</span>
+                    <span class="info-value" id="totalAmount">-</span>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <div class="payment-method" data-method="card">
+                    <span class="method-icon">💳</span>
+                    <span class="method-name">Банковская карта</span>
+                </div>
+                <div class="payment-method" data-method="sbp">
+                    <span class="method-icon">📱</span>
+                    <span class="method-name">СБП</span>
+                </div>
+                <div class="payment-method" data-method="crypto">
+                    <span class="method-icon">₿</span>
+                    <span class="method-name">Криптовалюта</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="payBtn" disabled>
+                <span class="btn-text">Выберите способ оплаты</span>
+            </button>
+
+            <div class="status-message" id="statusMessage"></div>
+
+            <div class="trust-badges">
+                <div class="badge">🔒 SSL защита</div>
+                <div class="badge">✅ Безопасно</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order');
+
+        if (!orderId) {
+            window.location.href = '/';
+        }
+
+        let selectedMethod = null;
+        let orderData = null;
+
+        // Load order info
+        async function loadOrderInfo() {
+            try {
+                const response = await fetch(`/api/order/${orderId}`);
+                orderData = await response.json();
+
+                if (orderData.error) {
+                    throw new Error(orderData.error);
+                }
+
+                document.getElementById('orderIdDisplay').textContent = `Заказ #${orderId}`;
+                document.getElementById('starsAmount').textContent = `${orderData.stars} ⭐`;
+                document.getElementById('accountName').textContent = orderData.account;
+                document.getElementById('totalAmount').textContent = `${orderData.amount} ₽`;
+
+            } catch (error) {
+                console.error('Error loading order:', error);
+                document.getElementById('statusMessage').innerHTML =
+                    '<span style="color: #F87171;">❌ Ошибка загрузки заказа</span>';
+            }
+        }
+
+        // Payment method selection
+        document.querySelectorAll('.payment-method').forEach(method => {
+            method.addEventListener('click', () => {
+                document.querySelectorAll('.payment-method').forEach(m =>
+                    m.classList.remove('selected'));
+                method.classList.add('selected');
+                selectedMethod = method.dataset.method;
+
+                const payBtn = document.getElementById('payBtn');
+                payBtn.disabled = false;
+                payBtn.querySelector('.btn-text').textContent = 'Оплатить';
+            });
+        });
+
+        // Pay button
+        document.getElementById('payBtn').addEventListener('click', async () => {
+            if (!selectedMethod) return;
+
+            const payBtn = document.getElementById('payBtn');
+            payBtn.disabled = true;
+            payBtn.innerHTML = '<span class="loading"></span><span>Обработка...</span>';
+
+            document.getElementById('statusMessage').innerHTML =
+                '<span class="loading"></span> Подключение к платежной системе...';
+
+            // TODO: Integrate real payment system
+            // For now, simulate payment success after 2 seconds
+            setTimeout(() => {
+                simulatePaymentSuccess();
+            }, 2000);
+        });
+
+        async function simulatePaymentSuccess() {
+            document.getElementById('statusMessage').innerHTML =
+                '<span style="color: #4ADE80;">✓ Платеж выполнен успешно!</span>';
+
+            // Simulate webhook call
+            try {
+                await fetch('/api/payment-webhook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderId: orderId,
+                        status: 'success',
+                        paymentMethod: selectedMethod,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                setTimeout(() => {
+                    window.location.href = '/success.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Webhook error:', error);
+                document.getElementById('statusMessage').innerHTML =
+                    '<span style="color: #F87171;">❌ Ошибка обработки платежа</span>';
+            }
+        }
+
+        loadOrderInfo();
+    </script>
+</body>
+</html>

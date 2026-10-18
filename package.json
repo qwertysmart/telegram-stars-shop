@@ -1,0 +1,22 @@
+{
+  "name": "telegram-stars-shop",
+  "version": "1.0.0",
+  "description": "Telegram Stars shop with Gramix API integration",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": ["telegram", "stars", "gramix"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "mongoose": "^8.0.0",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

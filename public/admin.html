@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель - AstroStars</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">✨</div>
+                <div class="logo-text">AstroStars Admin</div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Выйти</button>
+        </div>
+
+        <div class="dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Выручка</div>
+                        <div class="stat-value" id="totalRevenue">0₽</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Заказов</div>
+                        <div class="stat-value" id="totalOrders">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Продано звезд</div>
+                        <div class="stat-value" id="totalStars">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💵</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Цена за звезду</div>
+                        <div class="stat-value" id="starPrice">1.5₽</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h2>Настройки цены</h2>
+                <div class="form-group">
+                    <label>Цена за 1 звезду (₽)</label>
+                    <input type="number" id="priceInput" step="0.1" min="0.1" value="1.5">
+                    <button class="btn-primary" id="updatePriceBtn">Обновить цену</button>
+                </div>
+            </div>
+
+            <div class="orders-card">
+                <div class="orders-header">
+                    <h2>Последние заказы</h2>
+                    <button class="refresh-btn" id="refreshBtn">🔄 Обновить</button>
+                </div>
+                <div class="orders-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Дата</th>
+                                <th>Аккаунт</th>
+                                <th>Звезды</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTable">
+                            <tr>
+                                <td colspan="6" class="empty-state">Нет заказов</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
