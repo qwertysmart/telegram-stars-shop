@@ -80,21 +80,18 @@ def admin():
 def create_payment():
     try:
         data = request.json
-        stars = data.get('stars')
+        product = data.get('product', 'stars')
         account = data.get('account')
         amount = data.get('amount')
 
-        if not stars or not account or not amount:
+        if not account or not amount:
             return jsonify({'error': 'Missing required fields'}), 400
-
-        if stars < 1:
-            return jsonify({'error': 'Stars must be at least 1'}), 400
 
         order_id = generate_order_id()
 
         order = {
             'orderId': order_id,
-            'stars': stars,
+            'product': product,
             'account': account,
             'amount': amount,
             'status': 'pending',
@@ -104,11 +101,22 @@ def create_payment():
             'updatedAt': datetime.utcnow().isoformat()
         }
 
+        if product == 'stars':
+            stars = data.get('stars')
+            if not stars or stars < 1:
+                return jsonify({'error': 'Stars must be at least 1'}), 400
+            order['stars'] = stars
+        elif product == 'premium':
+            months = data.get('months')
+            if not months:
+                return jsonify({'error': 'Months required for premium'}), 400
+            order['months'] = months
+
         db = load_db()
         db['orders'].append(order)
         save_db(db)
 
-        print(f'✓ Order created: {order_id}')
+        print(f'✓ Order created: {order_id} ({product})')
 
         payment_url = f'/payment.html?order={order_id}'
 
@@ -150,7 +158,7 @@ def payment_webhook():
             print(f'✓ Payment confirmed for order: {order_id}')
 
             try:
-                gramix_result = send_stars_via_gramix(order['stars'], order['account'])
+                gramix_result = send_via_gramix(order)
 
                 update_order(order_id, {
                     'status': 'completed',
@@ -188,14 +196,21 @@ def get_order(order_id):
         if not order:
             return jsonify({'error': 'Order not found'}), 404
 
-        return jsonify({
+        result = {
             'orderId': order['orderId'],
             'status': order['status'],
-            'stars': order['stars'],
+            'product': order.get('product', 'stars'),
             'account': order['account'],
             'amount': order['amount'],
             'createdAt': order['createdAt']
-        })
+        }
+
+        if order.get('stars'):
+            result['stars'] = order['stars']
+        if order.get('months'):
+            result['months'] = order['months']
+
+        return jsonify(result)
 
     except Exception as e:
         print(f'✗ Error fetching order: {e}')
@@ -211,21 +226,26 @@ def get_admin_stats():
 
         completed = [o for o in orders if o['status'] == 'completed']
         total_revenue = sum(o['amount'] for o in completed)
-        total_stars = sum(o['stars'] for o in completed)
+        total_stars = sum(o.get('stars', 0) for o in completed)
 
         # Last 20 orders sorted by date desc
         recent = sorted(orders, key=lambda x: x['createdAt'], reverse=True)[:20]
 
         formatted = []
         for order in recent:
-            formatted.append({
+            item = {
                 'id': order['orderId'],
                 'date': order['createdAt'],
                 'account': order['account'],
-                'stars': order['stars'],
                 'amount': order['amount'],
-                'status': order['status']
-            })
+                'status': order['status'],
+                'product': order.get('product', 'stars')
+            }
+            if order.get('stars'):
+                item['stars'] = order['stars']
+            if order.get('months'):
+                item['months'] = order['months']
+            formatted.append(item)
 
         return jsonify({
             'success': True,
@@ -266,24 +286,40 @@ def update_star_price():
 
 
 # Gramix API integration
-def send_stars_via_gramix(stars, account):
+def send_via_gramix(order):
+    """Send stars or premium via Gramix API"""
     try:
-        username = extract_username(account)
+        username = extract_username(order['account'])
+        product = order.get('product', 'stars')
 
-        print(f'→ Sending {stars} stars to {username} via Gramix...')
-
-        response = requests.post(
-            f'{GRAMIX_API_URL}/send-stars',
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {GRAMIX_API_KEY}'
-            },
-            json={
-                'recipient': username,
-                'amount': stars
-            },
-            timeout=30
-        )
+        if product == 'premium':
+            print(f"→ Sending Premium {order['months']}mo to {username} via Gramix...")
+            response = requests.post(
+                f'{GRAMIX_API_URL}/send-premium',
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {GRAMIX_API_KEY}'
+                },
+                json={
+                    'recipient': username,
+                    'months': order['months']
+                },
+                timeout=30
+            )
+        else:
+            print(f"→ Sending {order['stars']} stars to {username} via Gramix...")
+            response = requests.post(
+                f'{GRAMIX_API_URL}/send-stars',
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {GRAMIX_API_KEY}'
+                },
+                json={
+                    'recipient': username,
+                    'amount': order['stars']
+                },
+                timeout=30
+            )
 
         data = response.json()
 
@@ -294,7 +330,7 @@ def send_stars_via_gramix(stars, account):
         return data
 
     except Exception as e:
-        print(f'✗ Error sending stars via Gramix: {e}')
+        print(f'✗ Error sending via Gramix: {e}')
         raise
 
 

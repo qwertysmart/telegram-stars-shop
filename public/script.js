@@ -28,7 +28,8 @@ async function loadLiveStats() {
             if (recent && orders.length > 0) {
                 recent.innerHTML = orders.slice(0, 4).map(o => {
                     const masked = maskAccount(o.account);
-                    return `<div class="recent-order"><span class="recent-user">${masked}</span><span class="recent-amount">+${o.stars} ⭐</span></div>`;
+                    const label = o.product === 'premium' ? `Premium ${o.months}м` : `+${o.stars} ⭐`;
+                    return `<div class="recent-order"><span class="recent-user">${masked}</span><span class="recent-amount">${label}</span></div>`;
                 }).join('');
             }
         }
@@ -72,46 +73,102 @@ function initializeForm() {
     const starsInput = document.querySelector('input[name="stars"]');
     const accountInput = document.getElementById('account');
     const totalPriceElement = document.getElementById('totalPrice');
-    const quickButtons = document.querySelectorAll('.quick-btn');
+    const priceInfoEl = document.getElementById('priceInfo');
+    const starsGroup = document.getElementById('starsGroup');
+    const premiumGroup = document.getElementById('premiumGroup');
+    const premiumMonthsInput = document.getElementById('premiumMonths');
+    const premiumPriceInput = document.getElementById('premiumPrice');
+    const starsQuickButtons = document.querySelectorAll('#starsQuick .quick-btn');
+    const premiumButtons = document.querySelectorAll('#premiumQuick .quick-btn');
     const submitBtn = document.getElementById('submitBtn');
+    const productTabs = document.querySelectorAll('.product-tab');
 
-    quickButtons.forEach(btn => {
+    let currentProduct = 'stars';
+
+    // Product tabs
+    productTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            productTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentProduct = tab.dataset.product;
+
+            if (currentProduct === 'stars') {
+                starsGroup.classList.remove('hidden');
+                premiumGroup.classList.add('hidden');
+                priceInfoEl.textContent = '1 звезда = 1.5₽';
+                updatePrice();
+            } else {
+                starsGroup.classList.add('hidden');
+                premiumGroup.classList.remove('hidden');
+                priceInfoEl.textContent = 'Telegram Premium подписка';
+                updatePrice();
+            }
+        });
+    });
+
+    starsQuickButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            const amount = btn.dataset.amount;
-            starsInput.value = amount;
+            starsInput.value = btn.dataset.amount;
             starsInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-            quickButtons.forEach(b => b.classList.remove('active'));
+            starsQuickButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            updatePrice();
+        });
+    });
 
+    premiumButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            premiumMonthsInput.value = btn.dataset.months;
+            premiumPriceInput.value = btn.dataset.price;
+            premiumButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             updatePrice();
         });
     });
 
     starsInput.addEventListener('input', () => {
-        quickButtons.forEach(b => b.classList.remove('active'));
+        starsQuickButtons.forEach(b => b.classList.remove('active'));
         updatePrice();
     });
 
     function updatePrice() {
-        const stars = parseInt(starsInput.value) || 0;
-        const totalPrice = stars * STAR_PRICE;
-        totalPriceElement.textContent = totalPrice.toLocaleString('ru-RU');
+        if (currentProduct === 'stars') {
+            const stars = parseInt(starsInput.value) || 0;
+            totalPriceElement.textContent = (stars * STAR_PRICE).toLocaleString('ru-RU');
+        } else {
+            const price = parseInt(premiumPriceInput.value) || 0;
+            totalPriceElement.textContent = price.toLocaleString('ru-RU');
+        }
     }
 
-    // Initial price update
     updatePrice();
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const stars = parseInt(starsInput.value);
         const account = accountInput.value.trim();
+        let payload;
 
-        if (stars < 1) {
-            showNotification('Введите корректное количество звезд', 'error');
-            return;
+        if (currentProduct === 'stars') {
+            const stars = parseInt(starsInput.value);
+            if (!stars || stars < 1) {
+                showNotification('Введите количество звезд', 'error');
+                return;
+            }
+            payload = { product: 'stars', stars, account, amount: stars * STAR_PRICE };
+        } else {
+            if (!premiumMonthsInput.value) {
+                showNotification('Выберите срок подписки', 'error');
+                return;
+            }
+            payload = {
+                product: 'premium',
+                months: parseInt(premiumMonthsInput.value),
+                account,
+                amount: parseInt(premiumPriceInput.value)
+            };
         }
 
         if (!account) {
@@ -126,8 +183,7 @@ function initializeForm() {
 
         submitBtn.disabled = true;
         submitBtn.querySelector('.btn-text').textContent = 'Создание заказа...';
-
-        await createPayment(stars, account);
+        await createPayment(payload);
     });
 
     function isValidTelegramAccount(account) {
@@ -137,18 +193,14 @@ function initializeForm() {
                /^[a-zA-Z0-9_]{5,32}$/.test(account);
     }
 
-    async function createPayment(stars, account) {
+    async function createPayment(payload) {
         try {
             const response = await fetch('/api/create-payment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    stars: stars,
-                    account: account,
-                    amount: stars * STAR_PRICE
-                })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();

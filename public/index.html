@@ -56,8 +56,21 @@
             </div>
 
             <div class="header">
-                <h1>Покупка Звезд Telegram</h1>
+                <h1>Telegram Stars & Premium</h1>
                 <p class="subtitle">Мгновенная доставка • Безопасно • Надежно</p>
+            </div>
+
+            <div class="product-tabs">
+                <button type="button" class="product-tab active" data-product="stars">
+                    <span class="tab-icon">⭐</span>
+                    <span class="tab-name">Звезды</span>
+                    <span class="tab-price">от 1.5₽</span>
+                </button>
+                <button type="button" class="product-tab" data-product="premium">
+                    <span class="tab-icon">👑</span>
+                    <span class="tab-name">Premium</span>
+                    <span class="tab-price">от 350₽</span>
+                </button>
             </div>
 
             <div class="stats">
@@ -78,7 +91,7 @@
             </div>
 
             <form id="purchaseForm" class="form">
-                <div class="form-group">
+                <div class="form-group" id="starsGroup">
                     <label for="stars">
                         <span class="label-text">Количество звезд</span>
                         <span class="label-badge">Популярно</span>
@@ -91,15 +104,28 @@
                             name="stars"
                             placeholder="100"
                             min="1"
-                            required
                         >
                     </div>
-                    <div class="quick-amounts">
+                    <div class="quick-amounts" id="starsQuick">
                         <button type="button" class="quick-btn" data-amount="50">50</button>
                         <button type="button" class="quick-btn" data-amount="100">100</button>
                         <button type="button" class="quick-btn" data-amount="500">500</button>
                         <button type="button" class="quick-btn" data-amount="1000">1000</button>
                     </div>
+                </div>
+
+                <div class="form-group hidden" id="premiumGroup">
+                    <label>
+                        <span class="label-text">Срок подписки</span>
+                        <span class="label-badge">Premium</span>
+                    </label>
+                    <div class="quick-amounts premium-options" id="premiumQuick">
+                        <button type="button" class="quick-btn" data-months="3" data-price="350">3 мес<br><small>350₽</small></button>
+                        <button type="button" class="quick-btn" data-months="6" data-price="650">6 мес<br><small>650₽</small></button>
+                        <button type="button" class="quick-btn" data-months="12" data-price="1100">12 мес<br><small>1100₽</small></button>
+                    </div>
+                    <input type="hidden" id="premiumMonths" name="premiumMonths" value="">
+                    <input type="hidden" id="premiumPrice" name="premiumPrice" value="">
                 </div>
 
                 <div class="form-group">
@@ -130,7 +156,7 @@
                         <span class="price-currency">₽</span>
                     </div>
                     <div class="price-details">
-                        <span>1 звезда = 1.5₽</span>
+                        <span id="priceInfo">1 звезда = 1.5₽</span>
                         <span class="price-delivery">• Доставка мгновенно</span>
                     </div>
                 </div>

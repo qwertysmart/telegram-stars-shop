@@ -124,7 +124,7 @@
 
             <div class="payment-info" id="orderInfo">
                 <div class="info-row">
-                    <span class="info-label">Количество звезд</span>
+                    <span class="info-label">Продукт</span>
                     <span class="info-value" id="starsAmount">-</span>
                 </div>
                 <div class="info-row">
@@ -188,7 +188,14 @@
                 }
 
                 document.getElementById('orderIdDisplay').textContent = `Заказ #${orderId}`;
-                document.getElementById('starsAmount').textContent = `${orderData.stars} ⭐`;
+
+                const productLabel = document.getElementById('starsAmount');
+                if (orderData.product === 'premium') {
+                    productLabel.textContent = `Premium ${orderData.months} мес 👑`;
+                } else {
+                    productLabel.textContent = `${orderData.stars} ⭐`;
+                }
+
                 document.getElementById('accountName').textContent = orderData.account;
                 document.getElementById('totalAmount').textContent = `${orderData.amount} ₽`;
 

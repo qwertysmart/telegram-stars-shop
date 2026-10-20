@@ -65,7 +65,7 @@ function updateOrdersTable(orders) {
             <td>#${order.id}</td>
             <td>${new Date(order.date).toLocaleString('ru-RU')}</td>
             <td>${order.account}</td>
-            <td>${order.stars}</td>
+            <td>${order.product === 'premium' ? `Premium ${order.months}м 👑` : `${order.stars} ⭐`}</td>
             <td>${order.amount}₽</td>
             <td><span class="status status-${order.status}">${getStatusText(order.status)}</span></td>
         </tr>
