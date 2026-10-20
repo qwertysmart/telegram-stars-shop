@@ -16,7 +16,7 @@ async function loadLiveStats() {
             const orders = data.orders || [];
             const today = new Date().toDateString();
             const todayOrders = orders.filter(o => new Date(o.date).toDateString() === today);
-            const starsToday = todayOrders.reduce((sum, o) => sum + o.stars, 0);
+            const starsToday = todayOrders.reduce((sum, o) => sum + (o.stars || 0), 0);
 
             const el = document.getElementById('ordersToday');
             const el2 = document.getElementById('starsToday');

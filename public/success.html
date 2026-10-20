@@ -113,12 +113,20 @@
             <div class="success-icon">✓</div>
 
             <h1 class="success-title">Оплата прошла успешно!</h1>
-            <p class="success-message">
-                Ваши звезды будут зачислены на аккаунт в течение нескольких минут.
+            <p class="success-message" id="successMessage">
+                Ваш заказ будет выполнен в течение нескольких минут.
                 Спасибо за покупку!
             </p>
 
             <div class="info-box">
+                <div class="info-item">
+                    <span class="info-label">Заказ</span>
+                    <span class="info-value" id="orderIdLabel">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Продукт</span>
+                    <span class="info-value" id="productLabel">-</span>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Статус</span>
                     <span class="info-value" style="color: #4ADE80;">Выполнено ✓</span>
@@ -135,7 +143,7 @@
 
             <div class="action-buttons">
                 <a href="/" class="btn-primary">
-                    <span class="btn-text">Купить еще звезды</span>
+                    <span class="btn-text">Купить еще</span>
                     <span class="btn-icon">→</span>
                 </a>
                 <a href="https://t.me" class="btn-secondary">
@@ -155,6 +163,33 @@
         const now = new Date();
         document.getElementById('currentTime').textContent =
             now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+        // Загружаем данные заказа и подставляем правильный продукт
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order');
+
+        if (orderId) {
+            fetch(`/api/order/${orderId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.orderId) {
+                        document.getElementById('orderIdLabel').textContent = `#${data.orderId}`;
+
+                        let productText, msgText;
+                        if (data.product === 'premium') {
+                            productText = `Telegram Premium ${data.months} мес 👑`;
+                            msgText = `Telegram Premium на ${data.months} мес. будет активирован на аккаунте в течение нескольких минут.`;
+                        } else {
+                            productText = `${data.stars} ⭐ Звёзды`;
+                            msgText = `${data.stars} звёзд будут зачислены на аккаунт в течение нескольких минут.`;
+                        }
+
+                        document.getElementById('productLabel').textContent = productText;
+                        document.getElementById('successMessage').textContent = msgText + ' Спасибо за покупку!';
+                    }
+                })
+                .catch(() => {});
+        }
     </script>
 </body>
 </html>
