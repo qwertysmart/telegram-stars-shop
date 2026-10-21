@@ -22,6 +22,54 @@ body {
     overflow-x: hidden;
 }
 
+/* Mini App compact mode */
+.tg-mini-app body {
+    padding: 0;
+}
+
+.tg-mini-app .page-wrap {
+    padding: 0;
+}
+
+.tg-mini-app .layout {
+    gap: 0;
+    justify-content: center;
+}
+
+.tg-mini-app .container {
+    padding: 16px;
+}
+
+.tg-mini-app .card {
+    border-radius: 20px;
+    padding: 24px 20px;
+}
+
+.tg-mini-app .logo {
+    margin-bottom: 20px;
+}
+
+.tg-mini-app .logo-icon-wrapper {
+    width: 44px;
+    height: 44px;
+}
+
+.tg-mini-app .logo-icon {
+    font-size: 22px;
+}
+
+.tg-mini-app .logo-text {
+    font-size: 24px;
+}
+
+.tg-mini-app .header h1 {
+    font-size: 22px;
+}
+
+.tg-mini-app .stats {
+    display: none;
+}
+
 body::before {
     content: '';
     position: fixed;
@@ -311,6 +359,36 @@ body::after {
 .premium-options { grid-template-columns: repeat(3, 1fr); }
 .premium-options .quick-btn { padding: 12px 8px; line-height: 1.3; }
 .premium-options .quick-btn small { font-size: 11px; opacity: 0.7; }
+
+.recipient-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.recipient-tab {
+    flex: 1;
+    padding: 12px;
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 10px;
+    color: #94A3B8;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.recipient-tab:hover {
+    border-color: #38BDF8;
+    color: #38BDF8;
+}
+
+.recipient-tab.active {
+    background: linear-gradient(135deg, #38BDF8, #2563EB);
+    border-color: #38BDF8;
+    color: #FFF;
+}
 
 .page-wrap {
     display: flex;

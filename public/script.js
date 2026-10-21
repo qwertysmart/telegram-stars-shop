@@ -3,39 +3,31 @@ const STAR_PRICE = 1.5;
 
 // Telegram Web App init
 const tg = window.Telegram?.WebApp;
-let tgUser = null;
+let tgUsername = null;
 
 if (tg) {
     tg.ready();
     tg.expand();
+    document.documentElement.classList.add('tg-mini-app');
 
-    // Применяем тему Telegram
-    applyTelegramTheme();
-    tg.onEvent('themeChanged', applyTelegramTheme);
-
-    // Автозаполняем username из данных пользователя
+    // Получаем username пользователя
     const user = tg.initDataUnsafe?.user;
     if (user?.username) {
-        tgUser = user;
-        const accountInput = document.getElementById('account');
-        if (accountInput && !accountInput.value) {
-            accountInput.value = '@' + user.username;
-        }
+        tgUsername = user.username;
     }
 }
 
-function applyTelegramTheme() {
-    if (!tg) return;
-    const root = document.documentElement;
-    const p = tg.themeParams;
-    if (p.bg_color) document.body.style.background = p.bg_color;
-    // Можно расширить под другие цвета темы
-}
-
 document.addEventListener('DOMContentLoaded', function() {
+    // В Mini App скрываем боковые панели и футер
+    if (tg) {
+        document.querySelectorAll('.side-panel').forEach(el => el.style.display = 'none');
+        const footer = document.querySelector('.site-footer');
+        if (footer) footer.style.display = 'none';
+    }
+
     generateStars();
     initializeForm();
-    loadLiveStats();
+    if (!tg) loadLiveStats();
 });
 
 async function loadLiveStats() {
@@ -103,6 +95,9 @@ function initializeForm() {
     const form = document.getElementById('purchaseForm');
     const starsInput = document.querySelector('input[name="stars"]');
     const accountInput = document.getElementById('account');
+    const accountGroup = document.getElementById('accountGroup');
+    const recipientTabs = document.querySelectorAll('.recipient-tab');
+    let recipient = 'self';
     const totalPriceElement = document.getElementById('totalPrice');
     const priceInfoEl = document.getElementById('priceInfo');
     const starsGroup = document.getElementById('starsGroup');
@@ -115,6 +110,30 @@ function initializeForm() {
     const productTabs = document.querySelectorAll('.product-tab');
 
     let currentProduct = 'stars';
+
+    // Recipient tabs
+    recipientTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            recipientTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            recipient = tab.dataset.recipient;
+
+            if (recipient === 'other') {
+                accountGroup.classList.remove('hidden');
+            } else {
+                accountGroup.classList.add('hidden');
+                // Подставляем свой username если есть
+                if (tgUsername && accountInput) {
+                    accountInput.value = '@' + tgUsername;
+                }
+            }
+        });
+    });
+
+    // При загрузке подставляем username если для себя
+    if (tgUsername && accountInput) {
+        accountInput.value = '@' + tgUsername;
+    }
 
     // Product tabs
     productTabs.forEach(tab => {

@@ -73,24 +73,32 @@
                 </button>
             </div>
 
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-value">10K+</div>
-                    <div class="stat-label">Клиентов</div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <div class="stat-value">99.9%</div>
-                    <div class="stat-label">Успешно</div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <div class="stat-value">24/7</div>
-                    <div class="stat-label">Поддержка</div>
-                </div>
-            </div>
-
             <form id="purchaseForm" class="form">
+                <div class="recipient-tabs">
+                    <button type="button" class="recipient-tab active" data-recipient="self">
+                        Для себя
+                    </button>
+                    <button type="button" class="recipient-tab" data-recipient="other">
+                        Подарить другому
+                    </button>
+                </div>
+
+                <div class="form-group hidden" id="accountGroup">
+                    <label for="account">
+                        <span class="label-text">Telegram аккаунт получателя</span>
+                        <span class="label-hint">💡 Совет</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">@</span>
+                        <input
+                            type="text"
+                            id="account"
+                            name="account"
+                            placeholder="username или t.me/username"
+                        >
+                    </div>
+                    <p class="hint-text">Убедитесь, что username указан правильно</p>
+                </div>
                 <div class="form-group" id="starsGroup">
                     <label for="stars">
                         <span class="label-text">Количество звезд</span>
@@ -129,22 +137,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="account">
-                        <span class="label-text">Telegram аккаунт</span>
-                        <span class="label-hint">💡 Совет</span>
-                    </label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">@</span>
-                        <input
-                            type="text"
-                            id="account"
-                            name="account"
-                            placeholder="username или t.me/username"
-                            required
-                        >
-                    </div>
-                    <p class="hint-text">Убедитесь, что ваш username указан правильно</p>
-                </div>
 
                 <div class="price-card">
                     <div class="price-header">
