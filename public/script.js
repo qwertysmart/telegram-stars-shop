@@ -1,6 +1,37 @@
 // Configuration
 const STAR_PRICE = 1.5;
 
+// Telegram Web App init
+const tg = window.Telegram?.WebApp;
+let tgUser = null;
+
+if (tg) {
+    tg.ready();
+    tg.expand();
+
+    // Применяем тему Telegram
+    applyTelegramTheme();
+    tg.onEvent('themeChanged', applyTelegramTheme);
+
+    // Автозаполняем username из данных пользователя
+    const user = tg.initDataUnsafe?.user;
+    if (user?.username) {
+        tgUser = user;
+        const accountInput = document.getElementById('account');
+        if (accountInput && !accountInput.value) {
+            accountInput.value = '@' + user.username;
+        }
+    }
+}
+
+function applyTelegramTheme() {
+    if (!tg) return;
+    const root = document.documentElement;
+    const p = tg.themeParams;
+    if (p.bg_color) document.body.style.background = p.bg_color;
+    // Можно расширить под другие цвета темы
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     generateStars();
     initializeForm();

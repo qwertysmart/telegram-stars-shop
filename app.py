@@ -3,6 +3,9 @@ import json
 import time
 import random
 import string
+import hashlib
+import hmac
+from urllib.parse import unquote
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 import requests
@@ -15,6 +18,7 @@ app = Flask(__name__, static_folder='public', static_url_path='')
 # Configuration
 GRAMIX_API_KEY = os.getenv('GRAMIX_API_KEY', '')
 GRAMIX_API_URL = os.getenv('GRAMIX_API_URL', 'https://api.gramix.org')
+BOT_TOKEN = os.getenv('BOT_TOKEN', '')
 STAR_PRICE = float(os.getenv('STAR_PRICE', 1.5))
 PORT = int(os.getenv('PORT', 3000))
 
@@ -35,6 +39,30 @@ def save_db(data):
     """Save orders to JSON file"""
     with open(DB_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+def validate_telegram_init_data(init_data):
+    """Validate Telegram WebApp initData signature"""
+    if not init_data or not BOT_TOKEN:
+        return False
+
+    try:
+        # Parse init_data to dict
+        parsed = {}
+        for item in init_data.split('&'):
+            key, _, value = item.partition('=')
+            parsed[key] = unquote(value)
+
+        received_hash = parsed.pop('hash', '')
+        data_check = '\n'.join(f'{k}={v}' for k, v in sorted(parsed.items()))
+
+        secret_key = hmac.new(b'WebAppData', BOT_TOKEN.encode(), hashlib.sha256).digest()
+        calc_hash = hmac.new(secret_key, data_check.encode(), hashlib.sha256).hexdigest()
+
+        return calc_hash == received_hash
+    except Exception as e:
+        print(f'initData validation error: {e}')
+        return False
+
 
 def find_order(order_id):
     """Find order by ID"""
@@ -73,6 +101,35 @@ def success():
 @app.route('/admin')
 def admin():
     return send_from_directory('public', 'admin.html')
+
+
+@app.route('/api/tg-user', methods=['POST'])
+def tg_user():
+    """Return Telegram user data from validated initData"""
+    try:
+        data = request.json
+        init_data = data.get('initData', '')
+
+        if not validate_telegram_init_data(init_data):
+            return jsonify({'success': False, 'error': 'Invalid signature'}), 403
+
+        # Parse user from initData
+        for item in init_data.split('&'):
+            if item.startswith('user='):
+                user_data = json.loads(unquote(item[5:]))
+                return jsonify({
+                    'success': True,
+                    'user': {
+                        'id': user_data.get('id'),
+                        'username': user_data.get('username'),
+                        'first_name': user_data.get('first_name')
+                    }
+                })
+
+        return jsonify({'success': False, 'error': 'No user data'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 
 # API: Create payment
